@@ -1,0 +1,7 @@
+[package]
+name = "wtr"
+version = "0.1.0"
+authors = ["Alexander Koshkin <akoshkin@ptsecurity.com>"]
+
+[dependencies]
+
