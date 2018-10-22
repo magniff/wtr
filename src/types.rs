@@ -4,8 +4,7 @@ use constants;
 
 
 fn opcode_argument(bytecode: &Vec<u8>, state: &MachineState) -> usize {
-    bytecode[state.ppointer+1] as usize * 256 +
-    bytecode[state.ppointer+2] as usize
+    bytecode[state.ppointer + 1] as usize * 256 + bytecode[state.ppointer + 2] as usize
 }
 
 
@@ -26,11 +25,11 @@ fn do_rshift(state: &mut MachineState, bytecode: &Vec<u8>) {
 fn do_setup_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
     match state.get_current_cell() {
         0 => {
-            state.ppointer +=
-                constants::LONG_OPCODE * 2 +
-                opcode_argument(bytecode, state);
-        },
-        _ => state.ppointer += constants::LONG_OPCODE
+            state.ppointer += {
+                constants::LONG_OPCODE * 2 + opcode_argument(bytecode, state)
+            };
+        }
+        _ => state.ppointer += constants::LONG_OPCODE,
     }
 }
 
@@ -70,19 +69,16 @@ fn do_drop(state: &mut MachineState) {
 
 
 fn do_add(state: &mut MachineState, bytecode: &Vec<u8>) {
-    let new_mpointer = match bytecode[state.ppointer+1] {
-        0 => {
-            state.mpointer + bytecode[state.ppointer+2] as usize
-        },
+    let new_mpointer = match bytecode[state.ppointer + 1] {
+        0 => state.mpointer + bytecode[state.ppointer + 2] as usize,
         1 => {
-            let shift = bytecode[state.ppointer+2] as usize;
+            let shift = bytecode[state.ppointer + 2] as usize;
             if shift > state.mpointer {
                 constants::TAPE_LEN - (shift - state.mpointer) + 1
-            }
-            else {
+            } else {
                 state.mpointer - shift
             }
-        },
+        }
         _ => {
             panic!("Whaa?");
         }
@@ -117,27 +113,24 @@ pub struct MachineState {
 
 
 impl MachineState {
-
     #[inline]
     pub fn stepi(&mut self, bytecode: &Vec<u8>) -> bool {
         match bytecode[self.ppointer] {
 
-            constants::TERMINATE  => (),
-            constants::LSHIFT     => do_lshift(self, bytecode),
-            constants::RSHIFT     => do_rshift(self, bytecode),
+            constants::TERMINATE => (),
+            constants::LSHIFT => do_lshift(self, bytecode),
+            constants::RSHIFT => do_rshift(self, bytecode),
             constants::SETUP_LOOP => do_setup_loop(self, bytecode),
-            constants::END_LOOP   => do_end_loop(self, bytecode),
-            constants::INC        => do_inc(self, bytecode),
-            constants::DEC        => do_dec(self, bytecode),
-            constants::DROP       => do_drop(self),
-            constants::ADD        => do_add(self, bytecode),
-            constants::WRITE      => do_write(self),
-            constants::READ       => do_read(self),
+            constants::END_LOOP => do_end_loop(self, bytecode),
+            constants::INC => do_inc(self, bytecode),
+            constants::DEC => do_dec(self, bytecode),
+            constants::DROP => do_drop(self),
+            constants::ADD => do_add(self, bytecode),
+            constants::WRITE => do_write(self),
+            constants::READ => do_read(self),
 
             // Unknown opcode case
-            _ => {
-                panic!("Unknown opcode '{}'", bytecode[self.ppointer])
-            }
+            _ => panic!("Unknown opcode '{}'", bytecode[self.ppointer]),
         }
         bytecode.len() - 1 == self.ppointer
     }
@@ -149,8 +142,7 @@ impl MachineState {
     pub fn shift_head_left(&mut self, value: usize) {
         if value > self.mpointer {
             self.mpointer = constants::TAPE_LEN - (value - self.mpointer) + 1
-        }
-        else {
+        } else {
             self.mpointer -= value
         }
     }
@@ -190,10 +182,10 @@ mod test {
     #[test]
     fn test_memory_pointer_inc_cycles() {
         let mut state = MachineState::new();
-        state.shift_head_right(TAPE_LEN+1);
+        state.shift_head_right(TAPE_LEN + 1);
         assert_eq!(state.mpointer, 0);
-        state.shift_head_right(2*TAPE_LEN);
-        assert_eq!(state.mpointer, TAPE_LEN-1);
+        state.shift_head_right(2 * TAPE_LEN);
+        assert_eq!(state.mpointer, TAPE_LEN - 1);
     }
 
     #[test]
@@ -211,4 +203,3 @@ mod test {
         assert_eq!(state.mpointer, TAPE_LEN - 1000 + 1);
     }
 }
-

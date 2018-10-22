@@ -13,7 +13,8 @@ fn main() {
 
     loop {
         let is_done: bool = machine.stepi(&program_binary);
-        if is_done {break}
+        if is_done {
+            break;
+        }
     }
 }
-

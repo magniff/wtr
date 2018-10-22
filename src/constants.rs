@@ -20,4 +20,3 @@ pub const TERMINATE: u8 = 255;
 // Opcode`s widths
 pub const LONG_OPCODE: usize = 3;
 pub const SHORT_OPCODE: usize = 1;
-

@@ -10,4 +10,3 @@ pub fn read_program(filename: &String) -> Vec<u8> {
         .expect("Unexpected");
     return program;
 }
-
