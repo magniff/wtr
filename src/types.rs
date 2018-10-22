@@ -8,7 +8,7 @@ fn opcode_argument(bytecode: &Vec<u8>, state: &MachineState) -> usize {
 }
 
 
-fn do_terminate(state: &mut MachineState, bytecode: &Vec<u8>) {
+fn do_terminate() {
     // just a noop
 }
 
@@ -81,8 +81,8 @@ fn do_write(state: &mut MachineState) {
 
 pub struct MachineState {
     memory: [Wrapping<u8>; constants::TAPE_LEN],
-    pub ppointer: usize,
-    pub mpointer: usize,
+    ppointer: usize,
+    mpointer: usize,
 }
 
 
@@ -91,7 +91,7 @@ impl MachineState {
     pub fn stepi(&mut self, bytecode: &Vec<u8>) {
         let current_opcode: u8 = bytecode[self.ppointer];
         match current_opcode {
-            constants::TERMINATE  => do_terminate(self, bytecode),
+            constants::TERMINATE  => do_terminate(),
             constants::LSHIFT     => do_lshift(self, bytecode),
             constants::RSHIFT     => do_rshift(self, bytecode),
             constants::SETUP_LOOP => do_setup_loop(self, bytecode),
@@ -102,6 +102,16 @@ impl MachineState {
             constants::WRITE      => do_write(self),
             _                     => panic!(),
         }
+    }
+
+    // ppointer getter
+    pub fn ppointer(&self) -> usize {
+        self.ppointer
+    }
+
+    // mpointer getter
+    pub fn mpointer(&self) -> usize {
+        self.mpointer
     }
 
     pub fn shift_head_right(&mut self, value: usize) {

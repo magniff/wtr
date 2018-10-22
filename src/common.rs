@@ -2,7 +2,6 @@ use std::fs;
 use std::io::prelude::*;
 
 
-
 pub fn read_program(filename: &String) -> Vec<u8> {
     let mut program: Vec<u8> = Vec::new();
 

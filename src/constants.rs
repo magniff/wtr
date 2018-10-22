@@ -1,4 +1,4 @@
-pub const TAPE_LEN: usize = 30000;
+pub const TAPE_LEN: usize = 10000;
 pub const SETUP_LOOP: u8 = 0;
 pub const END_LOOP: u8 = 1;
 pub const INC: u8 = 2;
