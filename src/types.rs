@@ -1,23 +1,19 @@
+use std::io::{stdin, Read};
 use std::num::Wrapping;
-
-
 use constants;
 
 
-#[inline]
 fn opcode_argument(bytecode: &Vec<u8>, state: &MachineState) -> usize {
     bytecode[state.ppointer+1] as usize * 256 +
     bytecode[state.ppointer+2] as usize
 }
 
 
-#[inline]
 fn do_terminate() {
     // just a noop
 }
 
 
-#[inline]
 fn do_lshift(state: &mut MachineState, bytecode: &Vec<u8>) {
     let shift_value = opcode_argument(bytecode, state);
     state.shift_head_left(shift_value);
@@ -25,7 +21,6 @@ fn do_lshift(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_rshift(state: &mut MachineState, bytecode: &Vec<u8>) {
     let shift_value = opcode_argument(bytecode, state);
     state.shift_head_right(shift_value);
@@ -33,7 +28,6 @@ fn do_rshift(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_setup_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
     match state.get_current_cell() {
         0 => {
@@ -46,7 +40,6 @@ fn do_setup_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_end_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
     match state.get_current_cell() {
         0 => state.ppointer += constants::LONG_OPCODE,
@@ -59,7 +52,6 @@ fn do_end_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_inc(state: &mut MachineState, bytecode: &Vec<u8>) {
     let current_cell_value = Wrapping(state.get_current_cell());
     let cell_inc_value = Wrapping(opcode_argument(bytecode, state) as u8);
@@ -68,7 +60,6 @@ fn do_inc(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_dec(state: &mut MachineState, bytecode: &Vec<u8>) {
     let current_cell_value = Wrapping(state.get_current_cell());
     let cell_inc_value = Wrapping(opcode_argument(bytecode, state) as u8);
@@ -77,14 +68,12 @@ fn do_dec(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_drop(state: &mut MachineState) {
     state.set_current_cell(Wrapping(0));
     state.ppointer += constants::SHORT_OPCODE;
 }
 
 
-#[inline]
 fn do_add(state: &mut MachineState, bytecode: &Vec<u8>) {
     let new_mpointer = match bytecode[state.ppointer+1] {
         0 => {
@@ -109,9 +98,18 @@ fn do_add(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
-#[inline]
 fn do_write(state: &mut MachineState) {
     print!("{}", state.get_current_cell() as char);
+    state.ppointer += constants::SHORT_OPCODE;
+}
+
+
+fn do_read(state: &mut MachineState) {
+    match stdin().bytes().next() {
+        Some(Ok(value)) => state.set_current_cell(Wrapping(value)),
+        _ => panic!("Whaaaaaa!!"),
+    }
+
     state.ppointer += constants::SHORT_OPCODE;
 }
 
@@ -126,8 +124,9 @@ pub struct MachineState {
 impl MachineState {
 
     #[inline]
-    pub fn stepi(&mut self, bytecode: &Vec<u8>) {
+    pub fn stepi(&mut self, bytecode: &Vec<u8>) -> bool {
         match bytecode[self.ppointer] {
+
             constants::TERMINATE  => do_terminate(),
             constants::LSHIFT     => do_lshift(self, bytecode),
             constants::RSHIFT     => do_rshift(self, bytecode),
@@ -138,22 +137,14 @@ impl MachineState {
             constants::DROP       => do_drop(self),
             constants::ADD        => do_add(self, bytecode),
             constants::WRITE      => do_write(self),
+            constants::READ       => do_read(self),
 
             // Unknown opcode case
             _ => {
                 panic!("Unknown opcode '{}'", bytecode[self.ppointer])
             }
         }
-    }
-
-    // ppointer getter
-    pub fn ppointer(&self) -> usize {
-        self.ppointer
-    }
-
-    // mpointer getter
-    pub fn mpointer(&self) -> usize {
-        self.mpointer
+        bytecode.len() - 1 == self.ppointer
     }
 
     pub fn shift_head_right(&mut self, value: usize) {

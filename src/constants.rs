@@ -2,7 +2,7 @@
 // in Python.
 
 // Len of machines memory buffer
-pub const TAPE_LEN: usize = 10000;
+pub const TAPE_LEN: usize = 30000;
 
 // Opcodes used
 pub const SETUP_LOOP: u8 = 0;

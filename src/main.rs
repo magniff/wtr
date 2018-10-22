@@ -12,10 +12,8 @@ fn main() {
     let mut machine = types::MachineState::new();
 
     loop {
-        machine.stepi(&program_binary);
-        if machine.ppointer() == program_binary.len() - 1 {
-            break;
-        }
+        let is_done: bool = machine.stepi(&program_binary);
+        if is_done {break}
     }
 }
 
