@@ -14,4 +14,3 @@ pub fn read_program(filename: &String) -> Vec<u8> {
     return program;
 }
 
-
