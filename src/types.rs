@@ -89,8 +89,7 @@ pub struct MachineState {
 impl MachineState {
 
     pub fn stepi(&mut self, bytecode: &Vec<u8>) {
-        let current_opcode: u8 = bytecode[self.ppointer];
-        match current_opcode {
+        match bytecode[self.ppointer] {
             constants::TERMINATE  => do_terminate(),
             constants::LSHIFT     => do_lshift(self, bytecode),
             constants::RSHIFT     => do_rshift(self, bytecode),
