@@ -1,18 +1,23 @@
 use std::num::Wrapping;
+
+
 use constants;
 
 
+#[inline]
 fn opcode_argument(bytecode: &Vec<u8>, state: &MachineState) -> usize {
     bytecode[state.ppointer+1] as usize * 256 +
     bytecode[state.ppointer+2] as usize
 }
 
 
+#[inline]
 fn do_terminate() {
     // just a noop
 }
 
 
+#[inline]
 fn do_lshift(state: &mut MachineState, bytecode: &Vec<u8>) {
     let shift_value = opcode_argument(bytecode, state);
     state.shift_head_left(shift_value);
@@ -20,6 +25,7 @@ fn do_lshift(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_rshift(state: &mut MachineState, bytecode: &Vec<u8>) {
     let shift_value = opcode_argument(bytecode, state);
     state.shift_head_right(shift_value);
@@ -27,6 +33,7 @@ fn do_rshift(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_setup_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
     match state.get_current_cell() {
         0 => {
@@ -39,6 +46,7 @@ fn do_setup_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_end_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
     match state.get_current_cell() {
         0 => state.ppointer += constants::LONG_OPCODE,
@@ -51,6 +59,7 @@ fn do_end_loop(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_inc(state: &mut MachineState, bytecode: &Vec<u8>) {
     let current_cell_value = Wrapping(state.get_current_cell());
     let cell_inc_value = Wrapping(opcode_argument(bytecode, state) as u8);
@@ -59,6 +68,7 @@ fn do_inc(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_dec(state: &mut MachineState, bytecode: &Vec<u8>) {
     let current_cell_value = Wrapping(state.get_current_cell());
     let cell_inc_value = Wrapping(opcode_argument(bytecode, state) as u8);
@@ -67,12 +77,39 @@ fn do_dec(state: &mut MachineState, bytecode: &Vec<u8>) {
 }
 
 
+#[inline]
 fn do_drop(state: &mut MachineState) {
     state.set_current_cell(Wrapping(0));
     state.ppointer += constants::SHORT_OPCODE;
 }
 
 
+#[inline]
+fn do_add(state: &mut MachineState, bytecode: &Vec<u8>) {
+    let new_mpointer = match bytecode[state.ppointer+1] {
+        0 => {
+            state.mpointer + bytecode[state.ppointer+2] as usize
+        },
+        1 => {
+            let shift = bytecode[state.ppointer+2] as usize;
+            if shift > state.mpointer {
+                constants::TAPE_LEN - (shift - state.mpointer) + 1
+            }
+            else {
+                state.mpointer - shift
+            }
+        },
+        _ => {
+            panic!("Whaa?");
+        }
+    };
+    state.memory[new_mpointer] += state.memory[state.mpointer];
+    state.memory[state.mpointer] = Wrapping(0);
+    state.ppointer += constants::LONG_OPCODE;
+}
+
+
+#[inline]
 fn do_write(state: &mut MachineState) {
     print!("{}", state.get_current_cell() as char);
     state.ppointer += constants::SHORT_OPCODE;
@@ -88,6 +125,7 @@ pub struct MachineState {
 
 impl MachineState {
 
+    #[inline]
     pub fn stepi(&mut self, bytecode: &Vec<u8>) {
         match bytecode[self.ppointer] {
             constants::TERMINATE  => do_terminate(),
@@ -98,8 +136,13 @@ impl MachineState {
             constants::INC        => do_inc(self, bytecode),
             constants::DEC        => do_dec(self, bytecode),
             constants::DROP       => do_drop(self),
+            constants::ADD        => do_add(self, bytecode),
             constants::WRITE      => do_write(self),
-            _                     => panic!(),
+
+            // Unknown opcode case
+            _ => {
+                panic!("Unknown opcode '{}'", bytecode[self.ppointer])
+            }
         }
     }
 
@@ -179,7 +222,7 @@ mod test {
     fn test_memory_pointer_dec_cycles() {
         let mut state = MachineState::new();
         state.shift_head_left(1000);
-        assert_eq!(state.mpointer, 29001);
+        assert_eq!(state.mpointer, TAPE_LEN - 1000 + 1);
     }
 }
 
