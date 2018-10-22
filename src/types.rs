@@ -9,11 +9,6 @@ fn opcode_argument(bytecode: &Vec<u8>, state: &MachineState) -> usize {
 }
 
 
-fn do_terminate() {
-    // just a noop
-}
-
-
 fn do_lshift(state: &mut MachineState, bytecode: &Vec<u8>) {
     let shift_value = opcode_argument(bytecode, state);
     state.shift_head_left(shift_value);
@@ -127,7 +122,7 @@ impl MachineState {
     pub fn stepi(&mut self, bytecode: &Vec<u8>) -> bool {
         match bytecode[self.ppointer] {
 
-            constants::TERMINATE  => do_terminate(),
+            constants::TERMINATE  => (),
             constants::LSHIFT     => do_lshift(self, bytecode),
             constants::RSHIFT     => do_rshift(self, bytecode),
             constants::SETUP_LOOP => do_setup_loop(self, bytecode),
